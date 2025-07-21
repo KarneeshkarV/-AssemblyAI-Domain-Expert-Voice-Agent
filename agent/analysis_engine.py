@@ -1,12 +1,9 @@
-import asyncio
 import os
 from typing import Any, Callable, Dict, Optional
 
 from agno.agent import Agent
 from agno.embedder.ollama import OllamaEmbedder
-from agno.knowledge.pdf import PDFKnowledgeBase
-from agno.knowledge.pdf_url import PDFUrlKnowledgeBase, PDFUrlReader
-from agno.knowledge.text import TextKnowledgeBase
+from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
 from agno.memory.v2.db.sqlite import SqliteMemoryDb
 from agno.memory.v2.memory import Memory
 from agno.models.openai import OpenAIChat
@@ -17,6 +14,7 @@ from agno.tools.duckduckgo import DuckDuckGoTools
 from agno.tools.reasoning import ReasoningTools
 from agno.tools.yfinance import YFinanceTools
 from agno.vectordb.qdrant import Qdrant
+from rich.pretty import pprint
 
 from qdrant_rag.rag_client import RagClient
 
@@ -24,6 +22,7 @@ api_key = os.getenv("QDRANT_API_KEY")
 qdrant_url = os.getenv("QDRANT_URL")
 collection_name = "Default"
 
+user_id = "Test User"
 vector_db = Qdrant(
     collection=collection_name,
     url=os.getenv("QDRANT_URL") or "http://localhost:6333",
@@ -58,7 +57,7 @@ def logger_hook(function_name: str, function_call: Callable, arguments: Dict[str
 
 
 @tool(
-    name="Get data from RAG",
+    name="get_data_from_rag",
     description="Tool to get data from RAG",
     show_result=True,
     stop_after_tool_call=True,
@@ -73,8 +72,19 @@ def rag_tool_query(message: str, collection_name: str = "Default", limit: int = 
     return rag_client.retrieve_documents(message)
 
 
-def finance_agent(message: str, user: str = "user"):
-    run_id: Optional[str] = None
+memory_agent = Agent(
+    model=OpenAIChat(id="gpt-4.1"),
+    memory=memory,
+    enable_agentic_memory=True,
+    enable_user_memories=True,
+    storage=storage,
+    add_history_to_messages=True,
+    num_history_runs=3,
+    markdown=True,
+)
+
+
+def memory_agent_query(message: str):
     memory_agent = Agent(
         model=OpenAIChat(id="gpt-4.1"),
         memory=memory,
@@ -85,6 +95,13 @@ def finance_agent(message: str, user: str = "user"):
         num_history_runs=3,
         markdown=True,
     )
+
+    pprint(memory.get_user_memories(user_id=user_id))
+    memory_agent.print_response(message, user_id=user_id)
+
+
+def finance_agent(message: str, user: str = "user"):
+    run_id: Optional[str] = None
     rag_agent = Agent(
         knowledge=knowledge_base,
         name="Personal Knowledge Agent",
@@ -141,7 +158,6 @@ def finance_agent(message: str, user: str = "user"):
             rag_agent,
             finance_agent,
             negative_web_agent,
-            memory_agent,
         ],
         tools=[ReasoningTools(add_instructions=True)],
         instructions=[
@@ -155,6 +171,12 @@ def finance_agent(message: str, user: str = "user"):
         ],
         markdown=True,
         show_members_responses=True,
+        memory=memory,
+        enable_agentic_memory=True,
+        enable_user_memories=True,
+        storage=storage,
+        add_history_to_messages=True,
+        num_history_runs=3,
         enable_agentic_context=True,
         add_datetime_to_instructions=True,
         success_criteria="The team has provided a complete financial analysis with data, visualizations, risk assessment, and actionable investment recommendations supported by quantitative analysis and market research.",

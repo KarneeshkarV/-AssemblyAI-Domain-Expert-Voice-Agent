@@ -68,7 +68,7 @@ web = [
 ]
 
 [project.scripts]
-conversation-intelligence = "conversation_intelligence_main:main"
+intelligence-cli = "cli:app"
 
 [build-system]
 requires = ["hatchling"]
