@@ -1,0 +1,140 @@
+[project]
+name = "conversation-intelligence"
+version = "1.0.0"
+description = "Advanced Conversation Intelligence System with AssemblyAI and Agno"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Core conversation intelligence
+    "agno>=0.1.0",
+    "assemblyai>=0.20.0",
+    
+    # Vector database and embeddings
+    "qdrant-client>=1.6.0",
+    "ollama>=0.1.0",
+    
+    # AI/ML models
+    "openai>=1.3.0",
+    "anthropic>=0.3.0",
+    
+    # Data processing
+    "numpy>=1.21.0",
+    "pandas>=2.0.0",
+    
+    # Environment and configuration
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    
+    # Async and utilities
+    "asyncio-throttle>=1.0.0",
+    "httpx>=0.24.0",
+    
+    # Development utilities
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+    "isort>=5.12.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+]
+
+docs = [
+    "mkdocs>=1.4.0",
+    "mkdocs-material>=8.5.0",
+    "mkdocstrings[python]>=0.19.0",
+]
+
+export = [
+    "fpdf2>=2.5.0",
+    "openpyxl>=3.1.0",
+    "python-pptx>=0.6.21",
+    "jinja2>=3.1.0",
+]
+
+web = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "websockets>=11.0.0",
+    "jinja2>=3.1.0",
+]
+
+[project.scripts]
+conversation-intelligence = "conversation_intelligence_main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared", "conversation_listener", "insights_engine"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+    "isort>=5.12.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0",
+    "ruff>=0.12.4",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "slow: Slow tests",
+]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
