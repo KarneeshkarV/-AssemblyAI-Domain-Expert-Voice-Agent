@@ -19,10 +19,12 @@ from qdrant_rag.rag_client import RagClient
 # )
 # rag_client.inject_text(youtube_transcript, name="YouTube Video Transcript")
 # save_text_to_file(youtube_transcript, "./youtube_transcript.txt")
-finance_agent(
-"what is the best investment strategy do a sweep market analysis and look at my personal docs for the best investment strategy and based on the current market suggest a portfolio which consists of nvidia , netflix , nasdaq , nifty 50 and P&G ,which can give me max profits with least risks and do store it in my memory?"
-)
-# memory_agent_query("Tell me all about the past memory")
-# memory_agent_query(
-    # "Tell me about investment which i should have done , and what do i love as a food ?",
+# finance_agent(
+# "what is the best investment strategy do a sweep market analysis and look at my personal docs for the best investment strategy and based on the current market suggest a portfolio which consists of nvidia , netflix , nasdaq , nifty 50 and P&G ,which can give me max profits with least risks and do store it in my memory?"
 # )
+# memory_agent_query("Tell me all about the past memory")
+memory_agent_query(
+    "Tell me about investment which i should have done , and what do i love as a food ?",
+    debug=True,
+    tui=True,
+)

@@ -51,6 +51,8 @@ def finance(
     query: str = typer.Argument(..., help="Financial analysis query"),
     user: str = typer.Option("user", help="User identifier for memory storage"),
     output: Optional[str] = typer.Option(None, help="Output file path (optional)"),
+    debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
+    tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
 ):
     """
     🏦 Run financial analysis with multi-agent team.
@@ -67,7 +69,7 @@ def finance(
         console.print(f"[blue]👤 User: {user}[/blue]")
 
         with console.status("[bold green]Analyzing..."):
-            finance_agent(query, user)
+            finance_agent(query, user, debug, tui)
 
         console.print("[green]✅ Financial analysis completed[/green]")
 
@@ -89,6 +91,8 @@ def memory(
         None, help="Memory query (required for 'query' action)"
     ),
     user: str = typer.Option("user", help="User identifier"),
+    debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
+    tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
 ):
     """
     🧠 Query or list stored memories.
@@ -108,11 +112,11 @@ def memory(
 
             console.print(f"[green]🔍 Querying memories: {query}[/green]")
             with console.status("[bold green]Searching memories..."):
-                memory_agent_query(query)
+                memory_agent_query(query, debug, tui)
 
         elif action == "list":
             console.print("[green]📋 Listing all memories[/green]")
-            memory_agent_query("Tell me all about the past memory")
+            memory_agent_query("Tell me all about the past memory", debug, tui)
         else:
             console.print(
                 f"[red]❌ Unknown action: {action}. Use 'query' or 'list'[/red]"

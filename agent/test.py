@@ -1,56 +1,154 @@
-from agno.agent import Agent
+from textwrap import dedent
+from typing import List
+
+from agno.agent import Agent, RunResponse  # noqa
 from agno.models.openai import OpenAIChat
-from agno.memory.v2.db.sqlite import SqliteMemoryDb
-from agno.memory.v2.memory import Memory
-from agno.tools.reasoning import ReasoningTools
-from agno.tools.yfinance import YFinanceTools
+from pydantic import BaseModel, Field
 
-memory = Memory(
-    # Use any model for creating and managing memories
-    model=OpenAIChat("o4-mini-2025-04-16"),
-    # Store memories in a SQLite database
-    db=SqliteMemoryDb(table_name="user_memories", db_file="tmp/agent.db"),
-    # We disable deletion by default, enable it if needed
-    delete_memories=True,
-    clear_memories=True,
-)
 
-agent = Agent(
-    model=OpenAIChat("o4-mini-2025-04-16"),
-    tools=[
-        ReasoningTools(add_instructions=True),
-        YFinanceTools(
-            stock_price=True,
-            analyst_recommendations=True,
-            company_info=True,
-            company_news=True,
-        ),
-    ],
-    # User ID for storing memories, `default` if not provided
-    user_id="ava",
-    instructions=[
-        "Use tables to display data.",
-        "Include sources in your response.",
-        "Only include the report in your response. No other text.",
-    ],
-    memory=memory,
-    # Let the Agent manage its memories
-    enable_agentic_memory=True,
-    markdown=True,
-)
+class MovieScript(BaseModel):
+    setting: str = Field(
+        ...,
+        description="A richly detailed, atmospheric description of the movie's primary location and time period. Include sensory details and mood.",
+    )
+    ending: str = Field(
+        ...,
+        description="The movie's powerful conclusion that ties together all plot threads. Should deliver emotional impact and satisfaction.",
+    )
+    genre: str = Field(
+        ...,
+        description="The film's primary and secondary genres (e.g., 'Sci-fi Thriller', 'Romantic Comedy'). Should align with setting and tone.",
+    )
+    name: str = Field(
+        ...,
+        description="An attention-grabbing, memorable title that captures the essence of the story and appeals to target audience.",
+    )
+    characters: List[str] = Field(
+        ...,
+        description="4-6 main characters with distinctive names and brief role descriptions (e.g., 'Sarah Chen - brilliant quantum physicist with a dark secret').",
+    )
+    storyline: str = Field(
+        ...,
+        description="A compelling three-sentence plot summary: Setup, Conflict, and Stakes. Hook readers with intrigue and emotion.",
+    )
 
+
+def json_mode_agent_test(location: str, debug: bool = True, tui: bool = True):
+    """Agent that uses JSON mode for movie script generation"""
+    json_mode_agent = Agent(
+        model=OpenAIChat(id="gpt-4o"),
+        description=dedent("""\
+            You are an acclaimed Hollywood screenwriter known for creating unforgettable blockbusters! 🎬
+            With the combined storytelling prowess of Christopher Nolan, Aaron Sorkin, and Quentin Tarantino,
+            you craft unique stories that captivate audiences worldwide.
+
+            Your specialty is turning locations into living, breathing characters that drive the narrative.\
+        """),
+        instructions=dedent("""\
+            When crafting movie concepts, follow these principles:
+
+            1. Settings should be characters:
+               - Make locations come alive with sensory details
+               - Include atmospheric elements that affect the story
+               - Consider the time period's impact on the narrative
+
+            2. Character Development:
+               - Give each character a unique voice and clear motivation
+               - Create compelling relationships and conflicts
+               - Ensure diverse representation and authentic backgrounds
+
+            3. Story Structure:
+               - Begin with a hook that grabs attention
+               - Build tension through escalating conflicts
+               - Deliver surprising yet inevitable endings
+
+            4. Genre Mastery:
+               - Embrace genre conventions while adding fresh twists
+               - Mix genres thoughtfully for unique combinations
+               - Maintain consistent tone throughout
+
+            Transform every location into an unforgettable cinematic experience!\
+        """),
+        response_model=MovieScript,
+        use_json_mode=True,
+        debug_mode=debug,
+    )
+
+    if tui:
+        json_mode_agent.print_response(location, stream=True)
+    else:
+        response = json_mode_agent.run(location, stream=True)
+        for chunk in response:
+            print(chunk.content, end="", flush=True)
+
+
+def structured_output_agent_test(location: str, debug: bool = True, tui: bool = True):
+    """Agent that uses structured outputs for movie script generation"""
+    structured_output_agent = Agent(
+        model=OpenAIChat(id="gpt-4o"),
+        description=dedent("""\
+            You are an acclaimed Hollywood screenwriter known for creating unforgettable blockbusters! 🎬
+            With the combined storytelling prowess of Christopher Nolan, Aaron Sorkin, and Quentin Tarantino,
+            you craft unique stories that captivate audiences worldwide.
+
+            Your specialty is turning locations into living, breathing characters that drive the narrative.\
+        """),
+        instructions=dedent("""\
+            When crafting movie concepts, follow these principles:
+
+            1. Settings should be characters:
+               - Make locations come alive with sensory details
+               - Include atmospheric elements that affect the story
+               - Consider the time period's impact on the narrative
+
+            2. Character Development:
+               - Give each character a unique voice and clear motivation
+               - Create compelling relationships and conflicts
+               - Ensure diverse representation and authentic backgrounds
+
+            3. Story Structure:
+               - Begin with a hook that grabs attention
+               - Build tension through escalating conflicts
+               - Deliver surprising yet inevitable endings
+
+            4. Genre Mastery:
+               - Embrace genre conventions while adding fresh twists
+               - Mix genres thoughtfully for unique combinations
+               - Maintain consistent tone throughout
+
+            Transform every location into an unforgettable cinematic experience!\
+        """),
+        response_model=MovieScript,
+        debug_mode=debug,
+    )
+
+    if tui:
+        structured_output_agent.print_response(location, stream=True)
+    else:
+        response = structured_output_agent.run(location, stream=True)
+        for chunk in response:
+            print(chunk.content, end="", flush=True)
+
+
+# Example usage with different locations
 if __name__ == "__main__":
-    # This will create a memory that "ava's" favorite stocks are NVIDIA and TSLA
-    agent.print_response(
-        "My favorite stocks are NVIDIA and TSLA",
-        stream=True,
-        show_full_reasoning=True,
-        stream_intermediate_steps=True,
-    )
-    # This will use the memory to answer the question
-    agent.print_response(
-        "Can you compare my favorite stocks?",
-        stream=True,
-        show_full_reasoning=True,
-        stream_intermediate_steps=True,
-    )
+    json_mode_agent_test("Tokyo")
+    structured_output_agent_test("Ancient Rome")
+
+# More examples to try:
+"""
+Creative location prompts to explore:
+1. "Underwater Research Station" - For a claustrophobic sci-fi thriller
+2. "Victorian London" - For a gothic mystery
+3. "Dubai 2050" - For a futuristic heist movie
+4. "Antarctic Research Base" - For a survival horror story
+5. "Caribbean Island" - For a tropical adventure romance
+"""
+
+# To get the response in a variable:
+# from rich.pretty import pprint
+
+# json_mode_response: RunResponse = json_mode_agent.run("New York")
+# pprint(json_mode_response.content)
+# structured_output_response: RunResponse = structured_output_agent.run("New York")
+# pprint(structured_output_response.content)

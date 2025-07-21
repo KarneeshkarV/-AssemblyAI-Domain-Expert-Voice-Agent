@@ -84,7 +84,7 @@ memory_agent = Agent(
 )
 
 
-def memory_agent_query(message: str):
+def memory_agent_query(message: str, debug: bool = True, tui: bool = True):
     memory_agent = Agent(
         model=OpenAIChat(id="gpt-4.1"),
         memory=memory,
@@ -94,13 +94,19 @@ def memory_agent_query(message: str):
         add_history_to_messages=True,
         num_history_runs=3,
         markdown=True,
+        debug_mode=debug,
     )
 
     pprint(memory.get_user_memories(user_id=user_id))
-    memory_agent.print_response(message, user_id=user_id)
+    
+    if tui:
+        memory_agent.print_response(message, user_id=user_id)
+    else:
+        response = memory_agent.run(message, user_id=user_id)
+        print(response.content)
 
 
-def finance_agent(message: str, user: str = "user"):
+def finance_agent(message: str, user: str = "user", debug: bool = True, tui: bool = True):
     run_id: Optional[str] = None
     rag_agent = Agent(
         knowledge=knowledge_base,
@@ -110,7 +116,7 @@ def finance_agent(message: str, user: str = "user"):
         tools=[rag_tool_query],
         model=OpenAIChat("gpt-4.1"),
         show_tool_calls=True,
-        debug_mode=True,
+        debug_mode=debug,
     )
     postive_web_agent = Agent(
         name="Web Search Agent",
@@ -119,6 +125,7 @@ def finance_agent(message: str, user: str = "user"):
         tools=[DuckDuckGoTools()],
         instructions="Always include sources",
         add_datetime_to_instructions=True,
+        debug_mode=debug,
     )
     negative_web_agent = Agent(
         name="Web Search Agent",
@@ -127,6 +134,7 @@ def finance_agent(message: str, user: str = "user"):
         tools=[DuckDuckGoTools()],
         instructions="Always include sources",
         add_datetime_to_instructions=True,
+        debug_mode=debug,
     )
 
     finance_agent = Agent(
@@ -147,6 +155,7 @@ def finance_agent(message: str, user: str = "user"):
             "Focus on delivering actionable financial insights.",
         ],
         add_datetime_to_instructions=True,
+        debug_mode=debug,
     )
     reasoning_finance_team = Team(
         user_id=user,
@@ -179,6 +188,7 @@ def finance_agent(message: str, user: str = "user"):
         num_history_runs=3,
         enable_agentic_context=True,
         add_datetime_to_instructions=True,
+        debug_mode=debug,
         success_criteria="The team has provided a complete financial analysis with data, visualizations, risk assessment, and actionable investment recommendations supported by quantitative analysis and market research.",
     )
     if run_id is None:
@@ -187,4 +197,8 @@ def finance_agent(message: str, user: str = "user"):
     else:
         print(f"Continuing Run: {run_id}\n")
 
-    reasoning_finance_team.print_response(message)
+    if tui:
+        reasoning_finance_team.print_response(message)
+    else:
+        response = reasoning_finance_team.run(message)
+        print(response.content)
