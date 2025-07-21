@@ -78,4 +78,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Project specific
 sample_audio/
+qdrant_storage/
+output/
+archive/

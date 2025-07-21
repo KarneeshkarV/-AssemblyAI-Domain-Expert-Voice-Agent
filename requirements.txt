@@ -10,6 +10,32 @@ assemblyai>=0.20.0      # Voice transcription and streaming
 ollama>=0.1.0           # Local LLM and embeddings
 python-dotenv>=1.0.0    # Environment variable management
 
+# LangChain dependencies
+langchain>=0.1.0        # Core LangChain framework
+langchain-openai>=0.1.0 # OpenAI LLM integration
+langchain-ollama>=0.1.0 # Ollama embeddings integration
+langchain-community>=0.1.0 # Community integrations (Cohere, etc.)
+langgraph>=0.1.0        # LangGraph for agent creation
+cohere>=4.0.0           # Cohere reranker integration
+langchain-cohere>=0.4.4 # Cohere integration
+
+# Vector database dependencies
+lancedb>=0.3.0          # LanceDB for vector storage
+faiss-cpu>=1.7.0        # Alternative FAISS vector store
+
+# Additional AI/ML dependencies
+anthropic>=0.3.0        # Anthropic Claude integration
+pandas>=2.0.0           # Data processing
+pydantic>=2.0.0         # Data validation
+
+# Web and async utilities
+httpx>=0.24.0           # HTTP client
+asyncio-throttle>=1.0.0 # Async throttling
+
+# CLI and display utilities
+rich>=13.0.0            # Rich text display
+typer>=0.9.0            # CLI framework
+
 # Optional dependencies for document processing
 PyPDF2>=3.0.0          # For PDF processing
 python-docx>=0.8.11    # For Word documents
@@ -19,5 +45,9 @@ requests>=2.28.0       # For web scraping
 # Development and testing
 pytest>=7.0.0
 pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
 black>=22.0.0
 flake8>=5.0.0
+mypy>=1.0.0
+isort>=5.12.0
+ruff>=0.12.4

@@ -14,13 +14,13 @@ class RagClient:
         collection_name="Default",
         ollama_host="localhost",
         qdrant_url=None,
-        qdrant_api_key=None,
+        # qdrant_api_key=None,
     ):
         self.collection_name = collection_name
         self.oclient = ollama.Client(host=ollama_host)
         self.qclient = QdrantClient(
-            url=qdrant_url or os.getenv("QDRANT_URL"),
-            api_key=qdrant_api_key or os.getenv("QDRANT_API_KEY"),
+            url=qdrant_url or os.getenv("QDRANT_URL") or "http://localhost:6333",
+            # api_key=qdrant_api_key or os.getenv("QDRANT_API_KEY"),
         )
         self.embedding_model = "nomic-embed-text:latest"
 
@@ -37,8 +37,9 @@ class RagClient:
                 ),
             )
 
-    def inject_text(self, text, collection_name=None):
+    def inject_text(self, text, collection_name=None, name=None):
         collection_name = collection_name or self.collection_name
+        name = name or "text_document"
         try:
             embeddings = self._get_embedding(text)
             self._ensure_collection_exists(len(embeddings), collection_name)
@@ -51,7 +52,7 @@ class RagClient:
                     models.PointStruct(
                         id=point_id,
                         vector=embeddings,
-                        payload={"text": text},
+                        payload={"text": text, "name": name},
                     )
                 ],
             )
@@ -83,7 +84,7 @@ class RagClient:
                     models.PointStruct(
                         id=point_id,
                         vector=embeddings,
-                        payload={"text": text, "filename": filename},
+                        payload={"text": text, "filename": filename, "name": filename},
                     )
                 ],
             )
@@ -113,6 +114,7 @@ class RagClient:
                     {
                         "text": result.payload.get("text", "No text available"),
                         "filename": result.payload.get("filename", "Unknown file"),
+                        "name": result.payload.get("name", "Unknown"),
                         "score": result.score,
                         "id": result.id,
                     }
@@ -134,11 +136,24 @@ class RagClient:
 
         context_parts = []
         for i, result in enumerate(results, 1):
+            source = result.get('filename', result.get('name', 'Unknown'))
             context_parts.append(
-                f"Document {i} (from {result['filename']}, score: {result['score']:.3f}):\n{result['text']}"
+                f"Document {i} (from {source}, score: {result['score']:.3f}):\n{result['text']}"
             )
 
         return "\n\n---\n\n".join(context_parts)
+
+    def clear_collection(self, collection_name=None):
+        """Clear all data from a collection"""
+        collection_name = collection_name or self.collection_name
+        try:
+            if self.qclient.collection_exists(collection_name=collection_name):
+                self.qclient.delete_collection(collection_name=collection_name)
+                print(f"Collection '{collection_name}' cleared successfully")
+            else:
+                print(f"Collection '{collection_name}' does not exist")
+        except Exception as e:
+            print(f"Error clearing collection '{collection_name}': {str(e)}")
 
 
 if __name__ == "__main__":
