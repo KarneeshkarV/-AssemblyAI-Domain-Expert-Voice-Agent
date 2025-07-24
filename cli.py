@@ -85,12 +85,52 @@ def finance(
 
 
 @app.command()
+def medical(
+    query: str = typer.Argument(..., help="Medical analysis query"),
+    user: str = typer.Option("medical_user", help="User identifier for memory storage"),
+    output: Optional[str] = typer.Option(None, help="Output file path (optional)"),
+    debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
+    tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
+):
+    """
+    🏥 Run medical analysis with multi-agent team.
+
+    Provides clinical diagnostic reasoning, research, pharmacology, and safety analysis.
+    """
+    if not check_environment():
+        raise typer.Exit(1)
+
+    try:
+        from agent.medical_analysis_engine import medical_analysis_team
+
+        console.print(f"[green]🔍 Running medical analysis for: {query}[/green]")
+        console.print(f"[blue]👤 User: {user}[/blue]")
+        console.print("[yellow]⚠️  Medical information is for educational purposes only[/yellow]")
+
+        with console.status("[bold green]Analyzing..."):
+            medical_analysis_team(query, user, debug, tui)
+
+        console.print("[green]✅ Medical analysis completed[/green]")
+
+        if output:
+            console.print(f"[blue]💾 Results saved to: {output}[/blue]")
+
+    except ImportError as e:
+        console.print(f"[red]❌ Import error: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ Error during analysis: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command()
 def memory(
     action: str = typer.Argument(..., help="Action: 'query' or 'list'"),
     query: Optional[str] = typer.Option(
         None, help="Memory query (required for 'query' action)"
     ),
     user: str = typer.Option("user", help="User identifier"),
+    medical: bool = typer.Option(False, help="Use medical memory database"),
     debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
     tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
 ):
@@ -103,7 +143,13 @@ def memory(
         raise typer.Exit(1)
 
     try:
-        from agent.analysis_engine import memory_agent_query
+        if medical:
+            from agent.medical_analysis_engine import medical_memory_agent_query
+            memory_function = medical_memory_agent_query
+            console.print("[blue]🏥 Using medical memory database[/blue]")
+        else:
+            from agent.analysis_engine import memory_agent_query
+            memory_function = memory_agent_query
 
         if action == "query":
             if not query:
@@ -112,11 +158,11 @@ def memory(
 
             console.print(f"[green]🔍 Querying memories: {query}[/green]")
             with console.status("[bold green]Searching memories..."):
-                memory_agent_query(query, debug, tui)
+                memory_function(query, debug, tui)
 
         elif action == "list":
             console.print("[green]📋 Listing all memories[/green]")
-            memory_agent_query("Tell me all about the past memory", debug, tui)
+            memory_function("Tell me all about the past memory", debug, tui)
         else:
             console.print(
                 f"[red]❌ Unknown action: {action}. Use 'query' or 'list'[/red]"
