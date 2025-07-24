@@ -106,6 +106,93 @@ def memory_agent_query(message: str, debug: bool = True, tui: bool = True):
         print(response.content)
 
 
+def create_finance_team(user: str = "user", debug: bool = False) -> Team:
+    """Create and return a persistent finance team instance for conversation."""
+    rag_agent = Agent(
+        knowledge=knowledge_base,
+        name="Personal Knowledge Agent", 
+        role="Handles personal knowledge and gives out the most relevant information",
+        search_knowledge=True,
+        tools=[rag_tool_query],
+        model=OpenAIChat("gpt-4.1"),
+        show_tool_calls=True,
+        debug_mode=debug,
+    )
+    postive_web_agent = Agent(
+        name="Web Search Agent",
+        role="Handle web search requests and general research and gives only the positive results about the topic",
+        model=OpenAIChat(id="gpt-4.1"),
+        tools=[DuckDuckGoTools()],
+        instructions="Always include sources",
+        add_datetime_to_instructions=True,
+        debug_mode=debug,
+    )
+    negative_web_agent = Agent(
+        name="Web Search Agent",
+        role="Handle web search requests and general research and gives only the nrgative results about the topic",
+        model=OpenAIChat(id="gpt-4.1"),
+        tools=[DuckDuckGoTools()],
+        instructions="Always include sources", 
+        add_datetime_to_instructions=True,
+        debug_mode=debug,
+    )
+    finance_agent_instance = Agent(
+        name="Finance Agent",
+        role="Handle financial data requests and market analysis",
+        model=OpenAIChat(id="gpt-4.1"),
+        tools=[
+            YFinanceTools(
+                stock_price=True,
+                stock_fundamentals=True,
+                analyst_recommendations=True,
+                company_info=True,
+            )
+        ],
+        instructions=[
+            "Use tables to display stock prices, fundamentals (P/E, Market Cap), and recommendations.",
+            "Clearly state the company name and ticker symbol.",
+            "Focus on delivering actionable financial insights.",
+        ],
+        add_datetime_to_instructions=True,
+        debug_mode=debug,
+    )
+    reasoning_finance_team = Team(
+        user_id=user,
+        name="Reasoning Finance Team",
+        mode="coordinate",
+        model=OpenAIChat(id="o4-mini-2025-04-16"),
+        members=[
+            postive_web_agent,
+            rag_agent,
+            finance_agent_instance,
+            negative_web_agent,
+        ],
+        tools=[ReasoningTools(add_instructions=True)],
+        instructions=[
+            "Always use memory agent to query about the previous user's memories and the topic and store the current user's memories about the topic",
+            "Collaborate to provide comprehensive financial and investment insights",
+            "You will be given both positive and negative information about the topic , be unbiased and provide only the most relevant information and which will be good for the user's long term goal",
+            "Consider both fundamental analysis and market sentiment",
+            "Use tables and charts to display data clearly and professionally",
+            "Present findings in a structured, easy-to-follow format",
+            "Only output the final consolidated analysis, not individual agent responses",
+        ],
+        markdown=True,
+        show_members_responses=True,
+        memory=memory,
+        enable_agentic_memory=True,
+        enable_user_memories=True,
+        storage=storage,
+        add_history_to_messages=True,
+        num_history_runs=3,
+        enable_agentic_context=True,
+        add_datetime_to_instructions=True,
+        debug_mode=debug,
+        success_criteria="The team has provided a complete financial analysis with data, visualizations, risk assessment, and actionable investment recommendations supported by quantitative analysis and market research.",
+    )
+    return reasoning_finance_team
+
+
 def finance_agent(message: str, user: str = "user", debug: bool = True, tui: bool = True):
     run_id: Optional[str] = None
     rag_agent = Agent(

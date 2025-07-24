@@ -240,6 +240,47 @@ def transcribe(
 
 
 @app.command()
+def converse(
+    team: str = typer.Option("finance", help="Agent team to use: 'finance' or 'medical'"),
+    user: str = typer.Option("user", help="User identifier for memory storage"),
+    debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
+    tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
+):
+    """
+    🗣️ Start a conversational session with AI agent teams using voice input.
+
+    Real-time voice-to-text transcription with intelligent agent responses.
+    """
+    if not check_environment():
+        raise typer.Exit(1)
+
+    try:
+        from agent.conversation_handler import create_conversation_handler, ConversationManager
+
+        # Validate team type
+        if not ConversationManager.validate_team_type(team):
+            console.print(f"[red]❌ Invalid team type: {team}[/red]")
+            ConversationManager.display_team_info(console)
+            raise typer.Exit(1)
+
+        # Display team information
+        ConversationManager.display_team_info(console)
+        
+        # Create and start conversation handler
+        conversation_handler = create_conversation_handler(team, user, debug, tui)
+        conversation_handler.start_conversation()
+
+    except KeyboardInterrupt:
+        console.print("\n[yellow]🛑 Conversation stopped by user[/yellow]")
+    except ImportError as e:
+        console.print(f"[red]❌ Import error: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ Error during conversation: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command()
 def stream():
     """
     🎙️ Real-time audio transcription from microphone.
