@@ -52,6 +52,13 @@ uv run python cli.py finance "Market sentiment analysis" --debug --no-tui
 # Minimal output - no debug, no TUI
 uv run python cli.py finance "Quick stock price check for AAPL" --no-debug --no-tui
 ```
+#### Medical Analysis with Output Control
+```bash
+uv run python cli.py medical "What did my docter say mean by the term 'dyspnea' in my case?" --debug --tui
+
+
+```
+All the Flags are applicalble to both the medical and financial analysis
 
 #### Advanced Financial Queries
 ```bash
@@ -240,6 +247,3 @@ uv run python main.py     # Run main application script
 - **Models**: OpenAI GPT-4 for reasoning, Ollama for embeddings
 - **CLI**: Typer with Rich formatting for beautiful terminal output
 
-## License
-
-[Your License Here]
