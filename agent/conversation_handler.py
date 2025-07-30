@@ -17,6 +17,7 @@ from agno.team.team import Team
 from assemblyAi.streamer import ConversationalStreamer
 from agent.analysis_engine import finance_agent, create_finance_team
 from agent.medical_analysis_engine import medical_analysis_team, create_medical_team
+from agent.legal_analysis_engine import legal_analysis_team, create_legal_team
 
 
 class ConversationHandler:
@@ -44,6 +45,8 @@ class ConversationHandler:
             return create_finance_team(user=self.user, debug=self.debug)
         elif self.team_type == "medical":
             return create_medical_team(user=self.user, debug=self.debug)
+        elif self.team_type == "legal":
+            return create_legal_team(user=self.user, debug=self.debug)
         else:
             raise ValueError(f"Unknown team type: {self.team_type}")
     
@@ -124,6 +127,15 @@ class ConversationHandler:
                     border_style="yellow"
                 )
             )
+        elif self.team_type == "legal":
+            self.console.print(
+                Panel(
+                    "[bold yellow]⚖️ Legal information is for educational purposes only - not legal advice.\n"
+                    "No attorney-client relationship is created. Always consult qualified legal counsel.[/bold yellow]",
+                    title="Legal Disclaimer",
+                    border_style="yellow"
+                )
+            )
         
         try:
             self.conversation_active = True
@@ -165,7 +177,8 @@ class ConversationManager:
         """Get list of available agent teams."""
         return {
             "finance": "🏦 Financial Analysis Team - Market data, investment analysis, financial planning",
-            "medical": "🏥 Medical Analysis Team - Clinical diagnostics, research, pharmacology, safety"
+            "medical": "🏥 Medical Analysis Team - Clinical diagnostics, research, pharmacology, safety",
+            "legal": "⚖️ Legal Analysis Team - Legal research, contract analysis, regulatory compliance, risk assessment"
         }
     
     @staticmethod

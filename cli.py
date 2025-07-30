@@ -124,6 +124,45 @@ def medical(
 
 
 @app.command()
+def legal(
+    query: str = typer.Argument(..., help="Legal analysis query"),
+    user: str = typer.Option("legal_user", help="User identifier for memory storage"),
+    output: Optional[str] = typer.Option(None, help="Output file path (optional)"),
+    debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
+    tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
+):
+    """
+    ⚖️ Run legal analysis with multi-agent team.
+
+    Provides legal research, contract analysis, regulatory compliance, and risk assessment.
+    """
+    if not check_environment():
+        raise typer.Exit(1)
+
+    try:
+        from agent.legal_analysis_engine import legal_analysis_team
+
+        console.print(f"[green]🔍 Running legal analysis for: {query}[/green]")
+        console.print(f"[blue]👤 User: {user}[/blue]")
+        console.print("[yellow]⚠️  Legal information is for educational purposes only - not legal advice[/yellow]")
+
+        with console.status("[bold green]Analyzing..."):
+            legal_analysis_team(query, user, debug, tui)
+
+        console.print("[green]✅ Legal analysis completed[/green]")
+
+        if output:
+            console.print(f"[blue]💾 Results saved to: {output}[/blue]")
+
+    except ImportError as e:
+        console.print(f"[red]❌ Import error: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]❌ Error during analysis: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command()
 def memory(
     action: str = typer.Argument(..., help="Action: 'query' or 'list'"),
     query: Optional[str] = typer.Option(
@@ -131,6 +170,7 @@ def memory(
     ),
     user: str = typer.Option("user", help="User identifier"),
     medical: bool = typer.Option(False, help="Use medical memory database"),
+    legal: bool = typer.Option(False, help="Use legal memory database"),
     debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
     tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
 ):
@@ -147,6 +187,10 @@ def memory(
             from agent.medical_analysis_engine import medical_memory_agent_query
             memory_function = medical_memory_agent_query
             console.print("[blue]🏥 Using medical memory database[/blue]")
+        elif legal:
+            from agent.legal_analysis_engine import legal_memory_agent_query
+            memory_function = legal_memory_agent_query
+            console.print("[blue]⚖️ Using legal memory database[/blue]")
         else:
             from agent.analysis_engine import memory_agent_query
             memory_function = memory_agent_query
@@ -241,7 +285,7 @@ def transcribe(
 
 @app.command()
 def converse(
-    team: str = typer.Option("finance", help="Agent team to use: 'finance' or 'medical'"),
+    team: str = typer.Option("finance", help="Agent team to use: 'finance', 'medical', or 'legal'"),
     user: str = typer.Option("user", help="User identifier for memory storage"),
     debug: bool = typer.Option(True, "--debug/--no-debug", help="Enable/disable debug mode"),
     tui: bool = typer.Option(True, "--tui/--no-tui", help="Enable/disable full TUI mode (vs text-only)"),
